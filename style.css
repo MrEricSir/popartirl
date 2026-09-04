@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  --bg: #0a0a0a;
+  --bg: #000000;
   --halftone-dot: #ff2d55;
   --paper: #ffffff;
   --halftone-tile: 22px;
@@ -31,6 +31,20 @@ body {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: manipulation;
+}
+
+/* Keeps the iOS status-bar / notch strip black in the installed PWA instead
+   of showing the white splash behind it. Zero height everywhere else. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: #000;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 #output {
