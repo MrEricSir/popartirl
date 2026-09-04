@@ -1,0 +1,12 @@
+{
+  "name": "Pop Art IRL",
+  "short_name": "PopArtIRL",
+  "description": "Roy Lichtenstein-style pop art view generated on the fly from the webcam video feed.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

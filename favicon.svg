@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Pop Art IRL</title>
+  <defs>
+    <pattern id="halftone" width="128" height="128" patternUnits="userSpaceOnUse">
+      <rect width="128" height="128" fill="#ffffff" />
+      <circle cx="0" cy="0" r="38" fill="#ff2d55" />
+      <circle cx="128" cy="0" r="38" fill="#ff2d55" />
+      <circle cx="0" cy="128" r="38" fill="#ff2d55" />
+      <circle cx="128" cy="128" r="38" fill="#ff2d55" />
+      <circle cx="64" cy="64" r="38" fill="#ff2d55" />
+    </pattern>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#halftone)" />
+</svg>

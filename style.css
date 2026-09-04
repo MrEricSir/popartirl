@@ -1,0 +1,376 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --halftone-dot: #ff2d55;
+  --paper: #ffffff;
+  --halftone-tile: 22px;
+  --halftone-radius: 5px;
+  --dos-blue: #0000a8;
+  --dos-cyan: #00a8a8;
+  --dos-bright-cyan: #00ffff;
+  --dos-yellow: #ffff00;
+  --dos-white: #ffffff;
+  --dos-black: #000000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--dos-white);
+  font-family: "Courier New", monospace;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+#output {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  object-fit: cover;
+  background: var(--bg);
+}
+
+#webcam {
+  display: none;
+}
+
+/* Title screen: drifting red Ben-Day dots on white, with a color-cycling title. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  background-color: var(--paper);
+}
+
+/* Oversized tiled dot layer that scrolls diagonally from the bottom left to
+   the top right. Two identical dot grids, the second shifted half a tile on
+   both axes, give the offset (brick) rows of a real halftone screen rather
+   than a plain square grid. Both grids share the tile size, so translating
+   the layer by exactly one tile loops seamlessly. */
+.overlay::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  background-color: var(--paper);
+  background-image: radial-gradient(
+      circle,
+      var(--halftone-dot) var(--halftone-radius),
+      transparent calc(var(--halftone-radius) + 1px)
+    ),
+    radial-gradient(
+      circle,
+      var(--halftone-dot) var(--halftone-radius),
+      transparent calc(var(--halftone-radius) + 1px)
+    );
+  background-size: var(--halftone-tile) var(--halftone-tile);
+  background-position: 0 0,
+    calc(var(--halftone-tile) / 2) calc(var(--halftone-tile) / 2);
+  animation: halftone-drift 9s linear infinite;
+}
+
+@keyframes halftone-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--halftone-tile), calc(-1 * var(--halftone-tile)), 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay::before {
+    animation: none;
+  }
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay.dimmed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlay-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.brand {
+  margin: 0;
+  font-family: "Irish Grover", "Courier New", cursive;
+  font-size: clamp(2.75rem, 12vw, 7rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--halftone-dot);
+  -webkit-text-stroke: 6px var(--dos-black);
+  paint-order: stroke fill;
+  text-shadow: 7px 7px 0 var(--dos-black);
+}
+
+/* Sits below the title and is the only thing that changes on click (prompt ->
+   "Requesting camera..." -> any error), so it is positioned out of flow: its
+   text can change length without nudging the title. */
+.status-line {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2rem);
+  transform: translateX(-50%);
+  margin: 0;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--dos-black);
+  background: var(--dos-yellow);
+  padding: 0.35rem 0.7rem;
+  border: 2px solid var(--dos-black);
+}
+
+.status-line.error {
+  white-space: normal;
+  max-width: 80vw;
+  color: var(--dos-white);
+  background: #a80000;
+}
+
+/* Panels: TuiCSS window/fieldset, kept close to the stock DOS-blue look. */
+
+.tui-window.tui-panel {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  width: min(94vw, 24rem);
+  max-height: 88vh;
+  overflow-y: auto;
+  background-color: var(--dos-blue);
+  color: var(--dos-white);
+}
+
+.tui-window.tui-panel.active {
+  display: block;
+}
+
+.tui-panel .tui-fieldset {
+  border: 6px double var(--dos-white);
+  background-color: inherit;
+  padding: 10px;
+}
+
+/* Turn the window legend into a stock cyan DOS title bar. */
+.tui-panel .tui-fieldset > legend {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 2px 0;
+  background-color: var(--dos-cyan);
+  color: var(--dos-black);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.tui-panel .tui-fieldset-button {
+  color: var(--dos-white);
+  background-color: var(--dos-cyan);
+  font-weight: bold;
+}
+
+.tui-panel .tui-fieldset-button:active {
+  color: var(--dos-bright-cyan) !important;
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-top: 0.7rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.tui-panel .tui-button {
+  padding: 3px 14px;
+  box-shadow: 3px 3px var(--dos-black);
+  font-weight: bold;
+}
+
+.tui-panel .tui-button:active {
+  box-shadow: none !important;
+}
+
+.tui-panel .tui-button:disabled,
+.tui-panel .tui-button.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tui-panel .tui-input-fieldset {
+  padding: 8px 6px;
+  background-color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.tui-panel .tui-input-fieldset > legend {
+  color: var(--dos-yellow);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 0.3rem;
+}
+
+.tui-panel .tui-checkbox {
+  color: var(--dos-white);
+  padding-left: 28px;
+}
+
+.range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.range-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--dos-white);
+}
+
+.range-value {
+  color: var(--dos-yellow);
+  font-weight: bold;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.range-value::before {
+  content: "[";
+}
+
+.range-value::after {
+  content: "]";
+}
+
+/* DOS trackbar: blocky cyan scrollbar-style slider with a square handle. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 2px 0;
+  background-color: var(--dos-cyan);
+  background-image: url("https://cdn.jsdelivr.net/npm/tuicss@2.1.2/dist/images/scroll-cyan.png");
+  background-repeat: repeat;
+  border: 2px solid var(--dos-black);
+  cursor: pointer;
+}
+
+input[type="range"]:focus {
+  outline: 2px dotted var(--dos-yellow);
+  outline-offset: 2px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 16px;
+  background: transparent;
+  border: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 0;
+  background-color: var(--dos-bright-cyan);
+  border: 2px solid var(--dos-black);
+  border-radius: 0;
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.35), inset 2px 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 16px;
+  background: transparent;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: var(--dos-bright-cyan);
+  border: 2px solid var(--dos-black);
+  border-radius: 0;
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.35), inset 2px 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+.stats {
+  margin: 0;
+  padding: 0.5rem;
+  background-color: var(--dos-black);
+  color: var(--dos-bright-cyan);
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.qr-body {
+  align-items: center;
+  text-align: center;
+}
+
+.qr-canvas {
+  width: 220px;
+  height: 220px;
+  image-rendering: pixelated;
+  background-color: var(--paper);
+  border: 2px solid var(--dos-black);
+}
+
+.qr-url {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--dos-yellow);
+  word-break: break-all;
+}
+
+.qr-body .tui-button {
+  align-self: center;
+}

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pop Art IRL</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="apple-touch-icon" href="favicon.svg" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0a0a0a" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Irish+Grover&display=swap" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tuicss@2.1.2/dist/tuicss.min.css" />
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" defer></script>
+</head>
+<body>
+
+<canvas id="output"></canvas>
+<video id="webcam" autoplay muted playsinline></video>
+
+<div id="overlay" class="overlay">
+  <div class="overlay-content">
+    <h1 id="brand" class="brand">Pop Art IRL</h1>
+    <p id="statusMessage" class="status-line">Click anywhere to begin</p>
+  </div>
+</div>
+
+<div id="qrPanel" class="tui-window tui-panel tui-scroll-cyan">
+  <fieldset class="tui-fieldset">
+    <legend class="center">Share Pop Art IRL</legend>
+    <button id="closeQrPanelButton" class="tui-fieldset-button" type="button" title="Close">
+      <span>X</span>
+    </button>
+
+    <div class="panel-body qr-body">
+      <canvas id="qrCanvas" class="qr-canvas"></canvas>
+      <p class="qr-url">mrericsir.github.io/popartirl</p>
+      <button id="openSettingsButton" class="tui-button" type="button">Settings</button>
+    </div>
+  </fieldset>
+</div>
+
+<div id="controlPanel" class="tui-window tui-panel tui-scroll-cyan">
+  <fieldset class="tui-fieldset">
+    <legend class="center">Settings</legend>
+    <button id="closePanelButton" class="tui-fieldset-button" type="button" title="Close">
+      <span>X</span>
+    </button>
+
+    <div class="panel-body">
+      <div class="button-row">
+        <button id="toggleButton" class="tui-button red-168 white-255-text" disabled>Stop camera</button>
+        <button id="resetButton" class="tui-button" type="button">Reset</button>
+      </div>
+
+      <fieldset class="tui-input-fieldset">
+        <legend>Color regions</legend>
+
+        <div class="range-field">
+          <span class="range-label">Working width<span id="widthValue" class="range-value"></span></span>
+          <input type="range" id="width" min="120" max="640" step="20" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Palette size<span id="paletteSizeValue" class="range-value"></span></span>
+          <input type="range" id="paletteSize" min="3" max="12" step="1" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Smoothing radius<span id="bilateralRadiusValue" class="range-value"></span></span>
+          <input type="range" id="bilateralRadius" min="0" max="5" step="1" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Smoothing color reach<span id="bilateralColorSigmaValue" class="range-value"></span></span>
+          <input type="range" id="bilateralColorSigma" min="5" max="80" step="5" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Merge similar colors<span id="minColorDistanceValue" class="range-value"></span></span>
+          <input type="range" id="minColorDistance" min="0" max="80" step="5" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Absorb small patches<span id="minRegionAreaValue" class="range-value"></span></span>
+          <input type="range" id="minRegionArea" min="0" max="300" step="10" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Render colors<span id="renderPaletteSizeValue" class="range-value"></span></span>
+          <input type="range" id="renderPaletteSize" min="2" max="12" step="1" />
+        </div>
+      </fieldset>
+
+      <fieldset class="tui-input-fieldset">
+        <legend>Halftone</legend>
+
+        <div class="range-field">
+          <span class="range-label">Pattern tiers<span id="patternTierFractionValue" class="range-value"></span></span>
+          <input type="range" id="patternTierFraction" min="0" max="100" step="10" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Solid vs. patterned<span id="solidTierFractionValue" class="range-value"></span></span>
+          <input type="range" id="solidTierFraction" min="0" max="100" step="10" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Stripe vs. dot<span id="stripeTierFractionValue" class="range-value"></span></span>
+          <input type="range" id="stripeTierFraction" min="0" max="100" step="10" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Pattern spacing<span id="patternSpacingValue" class="range-value"></span></span>
+          <input type="range" id="patternSpacing" min="4" max="24" step="1" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Pattern max coverage<span id="patternMaxCoverageFactorValue" class="range-value"></span></span>
+          <input type="range" id="patternMaxCoverageFactor" min="20" max="45" step="2" />
+        </div>
+      </fieldset>
+
+      <fieldset class="tui-input-fieldset">
+        <legend>Edge linework</legend>
+
+        <div class="range-field">
+          <span class="range-label">Edge threshold (high)<span id="edgeThresholdHighValue" class="range-value"></span></span>
+          <input type="range" id="edgeThresholdHigh" min="10" max="400" step="10" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Edge threshold (low)<span id="edgeThresholdLowValue" class="range-value"></span></span>
+          <input type="range" id="edgeThresholdLow" min="5" max="200" step="5" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Line thickness<span id="edgeLineWidthValue" class="range-value"></span></span>
+          <input type="range" id="edgeLineWidth" min="0" max="5" step="1" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Line tip taper<span id="tipTaperLengthValue" class="range-value"></span></span>
+          <input type="range" id="tipTaperLength" min="0" max="20" step="1" />
+        </div>
+      </fieldset>
+
+      <fieldset class="tui-input-fieldset">
+        <legend>Color stability</legend>
+
+        <div class="range-field">
+          <span class="range-label">Palette stability<span id="paletteStabilityValue" class="range-value"></span></span>
+          <input type="range" id="paletteStability" min="0.1" max="1" step="0.05" />
+        </div>
+        <div class="range-field">
+          <span class="range-label">Hue switch margin<span id="hueSwitchMarginValue" class="range-value"></span></span>
+          <input type="range" id="hueSwitchMargin" min="0" max="45" step="5" />
+        </div>
+      </fieldset>
+
+      <fieldset class="tui-input-fieldset">
+        <legend>Options</legend>
+        <label class="tui-checkbox">Bold pop-art colors
+          <input type="checkbox" id="popArtColors" />
+          <span></span>
+        </label>
+        <label class="tui-checkbox">Auto brightness/contrast
+          <input type="checkbox" id="autoLevels" />
+          <span></span>
+        </label>
+        <label class="tui-checkbox">Mirror image
+          <input type="checkbox" id="mirror" checked />
+          <span></span>
+        </label>
+      </fieldset>
+
+      <pre id="stats" class="tui-input stats">Camera off.</pre>
+    </div>
+  </fieldset>
+</div>
+
+<script type="module" src="popartirl.js"></script>
+</body>
+</html>
